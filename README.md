@@ -1,37 +1,25 @@
-## Welcome to GitHub Pages
+## Traffic Visualization
 
-You can use the [editor on GitHub](https://github.com/JloveU/TrafficVisualization/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+A number of web pages for visualizing big data in traffic.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Test Examples
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+**Visualization framework:**
 
-```markdown
-Syntax highlighted code block
+- [ECharts](http://echarts.baidu.com/)
+- [Leaflet](https://leafletjs.com/)
 
-# Header 1
-## Header 2
-### Header 3
+**Pages:**
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/JloveU/TrafficVisualization/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- [LeafletTest1](tests/LeafletTest1.html)
+- [LeafletTest2](tests/LeafletTest2.html)
+- [LeafletEChartsTest1](tests/LeafletEChartsTest1.html)
+- [LeafletEChartsTest2](tests/LeafletEChartsTest2.html)
+- [LeafletEChartsTest3](tests/LeafletEChartsTest3.html)
+- [LeafletEChartsTest4](tests/LeafletEChartsTest4.html)
+- [LeafletEChartsTest5](tests/LeafletEChartsTest5.html)
+- [LeafletEChartsTest6](tests/LeafletEChartsTest6.html)
+- [LeafletEChartsTest7](tests/LeafletEChartsTest7.html)
+- [LeafletEChartsTest8](tests/LeafletEChartsTest8.html)
+- [LeafletEChartsTest9](tests/LeafletEChartsTest9.html)
