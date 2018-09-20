@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="container" style="height: 100%"></div>
+       <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+       <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+       <!-- <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js"></script> -->
+       <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js'></script>
+       <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
+       <script type="text/javascript" src="http://echarts.baidu.com/resource/echarts-gl-latest/mapboxgl-token.js"></script>
+
+       <script src="https://cdn.jsdelivr.net/npm/maptalks@0.39.3/dist/maptalks.min.js"></script>
+       <script src="https://cdn.bootcss.com/echarts/3.8.5/echarts.min.js"></script>
+       <script src="http://sandbox.runjs.cn/uploads/rs/492/2mfkzkii/echarts-gl-master.m.js"></script>
+       <script src="https://cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+       <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var app = {};
+option = null;
+$.getJSON('asset/get/s/data-1524056463493-H1PcbpN2z.json', function(buildingsGeoJSON) {
+
+    var builds= buildingsGeoJSON.map(function(feature){
+        return {"type":"Feature",
+            "properties":{"name":Math.random().toString(),"height":feature.height||100},
+            "geometry":{"type":"Polygon","coordinates":[feature.polygon]}
+
+        }
+
+    });
+
+    echarts.registerMap('buildings', {
+        "features":builds
+    });
+
+    var regionsData = builds.map(function(feature) {
+        return {
+            name: feature.properties.name,
+            value: Math.random()*1,
+            height: feature.properties.height,
+            itemStyle:{
+                color:'red',
+                borderColor:'red'
+            }
+        };
+    });
+
+
+    $.getJSON('asset/get/s/data-1524055280228-SkugT242f.json', function(linesData) {
+        var data = linesData.features;
+
+        var hStep = 300 / (data.length - 1);
+        var taxiRoutes=[];
+        var i = 0;
+        for (var x in data) {
+            var lnglats = data[x].geometry.coordinates
+            taxiRoutes.push({
+                coords: lnglats,
+                lineStyle: {
+                    color: echarts.color.modifyHSL('#5A94DF', Math.round(hStep * x))
+
+                },
+                value:Math.random()*200
+            })
+        }
+
+        myChart.setOption({
+            maptalks: {
+                center: [-74.01164278497646, 40.70769573605318],
+                zoom: 14,
+                pitch: 55,
+                baseLayer: {
+                    'urlTemplate': 'http://a.tiles.mapbox.com/v3/spatialdev.map-c9z2cyef/{z}/{x}/{y}.png',
+                    'subdomains': ['a', 'b', 'c', 'd']
+                },
+                altitudeScale: 2,
+                postEffect: {
+                    enable: true,
+                    FXAA: {
+                        enable: true
+                    }
+                },
+                light: {
+                    main: {
+                        intensity: 1,
+                        shadow: true,
+                        shadowQuality: 'high'
+                    },
+                    ambient: {
+                        intensity: 0.
+                    },
+                    ambientCubemap: {
+                        texture: 'asset/get/s/data-1491838644249-ry33I7YTe.hdr',
+                        exposure: 1,
+                        diffuseIntensity: 0.5,
+                        specularIntensity: 2
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'map3D',
+                    coordinateSystem: 'maptalks',
+                    map: 'buildings',
+                    data: regionsData,
+                    shading: 'realistic',
+                    silent: true,
+                    instancing: true,
+                    realisticMaterial: {
+                        metalness: 1,
+                        roughness: 0.2,
+                    }
+                },
+                {
+                    type: 'lines3D',
+                    coordinateSystem: 'maptalks',
+                    effect: {
+                        show: true,
+                        constantSpeed: 1,
+                        trailWidth: 3,
+                        trailLength: 1,
+                        trailOpacity: 1,
+                        spotIntensity: 10
+                    },
+
+                    blendMode: 'lighter',
+
+                    polyline: true,
+
+                    data: {
+                        count: function() {
+                            return taxiRoutes.length;
+                        },
+                        getItem: function(idx) {
+                            return taxiRoutes[idx]
+                        }
+                    }
+                }
+            ]
+        });
+
+        var maptalksIns = myChart.getModel().getComponent('maptalks').getMaptalks();
+        maptalksIns.on('click', function(e) {
+            console.log(e)
+        })
+
+    });
+
+
+
+});
+
+window.addEventListener('resize', function() {
+    myChart.resize();
+});
+if (option && typeof option === "object") {
+    myChart.setOption(option, true);
+}
+       </script>
+   </body>
+</html>

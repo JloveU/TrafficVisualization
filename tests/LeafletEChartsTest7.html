@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaflet ECharts Test 7 (NPM Dependencies)</title>
+    <!-- Reference: https://github.com/gnijuohz/echarts-leaflet/blob/master/example/leaflet-multiple-layers.html -->
+    <!-- http://echarts.baidu.com/examples/editor.html?c=graph-npm -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+            integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+            crossorigin=""></script>
+    <script src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.0.4/echarts-en.js"></script>-->
+    <!--<script src="http://echarts.baidu.com/dist/echarts.min.js"></script>-->
+    <script src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+    <script src="https://cdn.rawgit.com/gnijuohz/echarts-leaflet/22b55a16/dist/echarts-leaflet.js"></script>
+    <!--<script src="https://raw.githubusercontent.com/gnijuohz/echarts-leaflet/master/dist/echarts-leaflet.js"></script>-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    var myChart = echarts.init(document.getElementById("map"));
+
+    {
+        myChart.showLoading();
+
+        $.getJSON("ECharts/Example/data/asset/data/npmdepgraph.min10.json", function (json) {
+            myChart.hideLoading();
+
+            myChart.setOption({
+                title: {
+                    text: "NPM Dependencies",
+                    left: "center",
+                    textStyle: {
+                        color: "#000"
+                    }
+                },
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: "quinticInOut",
+                series: [{
+                    type: "graph",
+                    layout: "none",
+                    // progressiveThreshold: 700,
+                    data: json.nodes.map(function (node) {
+                        return {
+                            x: node.x,
+                            y: node.y,
+                            id: node.id,
+                            name: node.label,
+                            symbolSize: node.size,
+                            itemStyle: {
+                                normal: {
+                                    color: node.color
+                                }
+                            }
+                        };
+                    }),
+                    edges: json.edges.map(function (edge) {
+                        return {
+                            source: edge.sourceID,
+                            target: edge.targetID
+                        };
+                    }),
+                    label: {
+                        emphasis: {
+                            position: "right",
+                            show: true
+                        }
+                    },
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    lineStyle: {
+                        normal: {
+                            width: 0.5,
+                            curveness: 0.3,
+                            opacity: 0.7
+                        }
+                    }
+                }]
+            }, true);
+        });
+    }
+</script>
+</body>
+</html>

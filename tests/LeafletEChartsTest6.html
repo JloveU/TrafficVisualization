@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaflet ECharts Test 6 (Global Wind Visualization)</title>
+    <!-- Reference: https://github.com/gnijuohz/echarts-leaflet/blob/master/example/leaflet-multiple-layers.html -->
+    <!-- http://echarts.baidu.com/examples/editor.html?c=global-wind-visualization&gl=1 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+            integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+            crossorigin=""></script>
+    <script src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.0.4/echarts-en.js"></script>-->
+    <!--<script src="http://echarts.baidu.com/dist/echarts.min.js"></script>-->
+    <script src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+    <script src="https://cdn.rawgit.com/gnijuohz/echarts-leaflet/22b55a16/dist/echarts-leaflet.js"></script>
+    <!--<script src="https://raw.githubusercontent.com/gnijuohz/echarts-leaflet/master/dist/echarts-leaflet.js"></script>-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    var myChart = echarts.init(document.getElementById("map"));
+
+    {
+        $.getJSON("ECharts/Example/data-gl/asset/data/winds.json", function (windData) {
+            var data = [];
+            var maxMag = 0;
+            var minMag = Infinity;
+            for (var j = 0; j < windData.ny; j++) {
+                for (var i = 0; i <= windData.nx; i++) {
+                    // Continuous data.
+                    var p = (i % windData.nx) + j * windData.nx;
+                    var vx = windData.data[p][0];
+                    var vy = windData.data[p][1];
+                    var mag = Math.sqrt(vx * vx + vy * vy);
+                    // 数据是一个一维数组
+                    // [ [经度, 维度，向量经度方向的值，向量维度方向的值] ]
+                    data.push([
+                        i / windData.nx * 360 - 180,
+                        j / windData.ny * 180 - 90,
+                        vx,
+                        vy,
+                        mag
+                    ]);
+                    maxMag = Math.max(mag, maxMag);
+                    minMag = Math.min(mag, minMag);
+                }
+            }
+            myChart.setOption({
+                title: {
+                    text: "Global Wind Visualization",
+                    left: "center",
+                    textStyle: {
+                        color: "#fff"
+                    }
+                },
+                tooltip: {
+                    trigger: "item"
+                },
+                animation: false,
+                leaflet: {
+                    center: [104.114129, 37.550339],
+                    zoom: 4,
+                    roam: true,
+                    layerControl: {
+                        position: "topright"
+                    },
+                    tiles: [{
+                        label: "Gaode Road",
+                        urlTemplate: "http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+                        options: {
+                            subdomains: "1234"
+                        }
+                    }, {
+                        label: "Gaode Image",
+                        urlTemplate: "http://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+                        options: {
+                            subdomains: "1234"
+                        }
+                    }, {
+                        label: "Map World",
+                        urlTemplate: "http://t{s}.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}",
+                        options: {
+                            subdomains: "1234"
+                        }
+                    }, {
+                        label: "Esri Satellite",
+                        urlTemplate: "http://server.arcgisonline.com/arcgis/rest/services/world_imagery/mapserver/tile/{z}/{y}/{x}"
+                    }, {
+                        label: "Open Street Map",
+                        urlTemplate: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+                        options: {
+                            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+                        }
+                    }, {
+                        label: "GeoQ Blue",
+                        urlTemplate: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}"
+                    }, {
+                        label: "None",
+                        urlTemplate: ""
+                    }]
+                },
+                visualMap: {
+                    left: "left",
+                    min: minMag,
+                    max: maxMag,
+                    dimension: 4,
+                    inRange: {
+                        // color: ["green", "yellow", "red"]
+                        color: ["#313695", "#4575b4", "#74add1", "#abd9e9", "#e0f3f8", "#ffffbf", "#fee090", "#fdae61", "#f46d43", "#d73027", "#a50026"]
+                    },
+                    realtime: false,
+                    calculable: true,
+                    textStyle: {
+                        color: "#fff"
+                    }
+                },
+                series: [{
+                    type: "flowGL",
+                    coordinateSystem: "leaflet",
+                    data: data,
+                    supersampling: 4,
+                    particleType: "line",
+                    particleDensity: 128,
+                    particleSpeed: 1,
+                    // gridWidth: windData.nx,
+                    // gridHeight: windData.ny,
+                    itemStyle: {
+                        opacity: 0.7
+                    }
+                }]
+            });
+        });
+    }
+</script>
+</body>
+</html>
