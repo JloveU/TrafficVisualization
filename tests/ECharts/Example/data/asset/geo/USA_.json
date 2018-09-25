@@ -9,8 +9,8 @@
         "style": {
           "color": "#ff0000"
         },
-        "popup_content": "This is Alabama.",
-        "show_on_map": true
+        "popupContent": "This is Alabama.",
+        "visible": true
       },
       "geometry": {
         "type": "Polygon",

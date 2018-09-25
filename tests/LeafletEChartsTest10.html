@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Leaflet ECharts Test 10 (Visualization of GeoJSON Data)</title>
+    <title>Leaflet ECharts Test 10 (Visualization of GeoJSON Data and Image Overlay)</title>
     <link rel="stylesheet" href="../resources/libs/leaflet/1.3.4/leaflet.css"/>
     <script src="../resources/libs/leaflet/1.3.4/leaflet.js"></script>
     <script src="../resources/libs/echarts/4.1.0/echarts.min.js"></script>
@@ -22,7 +22,7 @@
     let chart = echarts.init(document.getElementById("map"));
     chart.setOption({
         title: {
-            text: "Visualization of GeoJSON Data",
+            text: "Visualization of GeoJSON Data and Image Overlay",
             left: "center",
             textStyle: {
                 color: "#fff"
@@ -75,38 +75,61 @@
         },
     });
     let map = chart.getModel().getComponent("leaflet").getLeaflet();
+    L.control.scale().addTo(map);
 
-    let geoJsonLayer = L.geoJSON([], {
+    let geoJsonOptions = {
         "style": function (feature) {
             return (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("style")) ? feature.properties.style : {};
         },
         "onEachFeature": function (feature, layer) {
-            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("popup_content")) {
-                layer.bindPopup(feature.properties.popup_content);
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("popupContent")) {
+                layer.bindPopup(feature.properties.popupContent);
             }
         },
         "filter": function (feature, layer) {
-            return (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("show_on_map")) ? feature.properties.show_on_map : true;
+            return (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("visible")) ? feature.properties.visible : true;
         }
-    }).addTo(map);
+    };
 
     {
         function onMapContextMenu(e) {
-            let command = prompt("Please input a command:", "ShowGeoJson:./ECharts/Example/data/asset/geo/USA_.json");
+            let command = prompt("Please input a command:", '[AddImage] {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}');
             if (!command) {
                 return;
             }
 
             console.debug("command: ", command);
 
-            if (command.startsWith("ShowGeoJson:")) {
-                let geoJsonFileName = command.substring("ShowGeoJson:".length);
+            if (command.startsWith("[SetView]")) {  // [SetView] {"lon": 116.3912, "lat": 39.9062, "zoom": 12}
+                let args = JSON.parse(command.substring("[SetView]".length));
+                console.debug("[SetView] args:", args);
 
-                console.debug("geoJsonFileName: ", geoJsonFileName);
+                map.setView(L.latLng(args.lat, args.lon), args.zoom);
+            } else if (command.startsWith("[AddGeoJson]")) {  // [AddGeoJson] {"url": "./ECharts/Example/data/asset/geo/USA_.json"}
+                let args = JSON.parse(command.substring("[AddGeoJson]".length));
+                console.debug("[AddGeoJson] args:", args);
 
-                $.getJSON(geoJsonFileName, function (geoJsonData) {
-                    geoJsonLayer.addData(geoJsonData);
+                $.getJSON(args.url, function (data) {
+                    let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
+                    map.fitBounds(layer.getBounds());
+
+                    alert("Succeeded!");
+                }).fail(function () {
+                    alert("Failed!");
                 });
+            } else if (command.startsWith("[AddImage]")) {  // [AddImage] {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}
+                let args = JSON.parse(command.substring("[AddImage]".length));
+                console.debug("[AddImage] args:", args);
+
+                if (args.showBounds) {
+                    L.rectangle(args.bounds).addTo(map);
+                }
+                let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
+                map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
+
+                alert("Succeeded!");
+            } else {
+                alert("Unknown command!");
             }
         }
 
