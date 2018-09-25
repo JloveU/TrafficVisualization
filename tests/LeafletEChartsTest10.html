@@ -91,46 +91,85 @@
         }
     };
 
+    function getQueryString(name) {
+        let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        let r = window.location.search.substr(1).match(reg);
+
+        return (r != null) ? unescape(r[2]) : null;
+    }
+
+    function setView(args) {
+        console.debug("[setView] args:", args);
+
+        map.setView(L.latLng(args.lat, args.lon), args.zoom);
+    }
+
+    function addGeoJson(args) {
+        console.debug("[addGeoJson] args:", args);
+
+        $.getJSON(args.url, function (data) {
+            let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
+            map.fitBounds(layer.getBounds());
+
+            console.debug("[addGeoJson] Succeeded!");
+        }).fail(function () {
+            console.debug("[addGeoJson] Failed!");
+        });
+    }
+
+    function addImageOverlay(args) {
+        console.debug("[addImageOverlay] args:", args);
+
+        if (args.showBounds) {
+            L.rectangle(args.bounds).addTo(map);
+        }
+        let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
+        map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
+
+        console.debug("[addImageOverlay] Succeeded!");
+    }
+
+    let commandFunctions = {
+        "setView": setView,
+        "addGeoJson": addGeoJson,
+        "addImageOverlay": addImageOverlay
+    };
+
+    {
+        (function (){
+            let commands = JSON.parse(getQueryString("commands"));
+            if (!commands) {
+                return;
+            }
+
+            // examples:
+            // ?commands=[{"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}]
+            // ?commands=[{"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json"}}, {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}}]
+
+            console.debug("commands: ", commands);
+
+            for (let i = 0; i < commands.length; ++i) {
+                let command = commands[i];
+                commandFunctions[command.type](command.args);
+            }
+        })();
+    }
+
     {
         function onMapContextMenu(e) {
-            let command = prompt("Please input a command:", '[AddImage] {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}');
+            let command = JSON.parse(prompt("Please input a command:"));
             if (!command) {
                 return;
             }
 
+            // examples:
+            // {"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}
+            // {"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json"}}
+            // {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}}
+
             console.debug("command: ", command);
 
-            if (command.startsWith("[SetView]")) {  // [SetView] {"lon": 116.3912, "lat": 39.9062, "zoom": 12}
-                let args = JSON.parse(command.substring("[SetView]".length));
-                console.debug("[SetView] args:", args);
-
-                map.setView(L.latLng(args.lat, args.lon), args.zoom);
-            } else if (command.startsWith("[AddGeoJson]")) {  // [AddGeoJson] {"url": "./ECharts/Example/data/asset/geo/USA_.json"}
-                let args = JSON.parse(command.substring("[AddGeoJson]".length));
-                console.debug("[AddGeoJson] args:", args);
-
-                $.getJSON(args.url, function (data) {
-                    let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
-                    map.fitBounds(layer.getBounds());
-
-                    alert("Succeeded!");
-                }).fail(function () {
-                    alert("Failed!");
-                });
-            } else if (command.startsWith("[AddImage]")) {  // [AddImage] {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}
-                let args = JSON.parse(command.substring("[AddImage]".length));
-                console.debug("[AddImage] args:", args);
-
-                if (args.showBounds) {
-                    L.rectangle(args.bounds).addTo(map);
-                }
-                let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
-                map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
-
-                alert("Succeeded!");
-            } else {
-                alert("Unknown command!");
-            }
+            commandFunctions[command.type](command.args);
         }
 
         map.on("contextmenu", onMapContextMenu);
