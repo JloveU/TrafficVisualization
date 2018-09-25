@@ -23,3 +23,4 @@ A number of web pages for visualizing big data in traffic.
 - [LeafletEChartsTest7](tests/LeafletEChartsTest7.html)
 - [LeafletEChartsTest8](tests/LeafletEChartsTest8.html)
 - [LeafletEChartsTest9](tests/LeafletEChartsTest9.html)
+- [LeafletEChartsTest10](tests/LeafletEChartsTest10.html)
