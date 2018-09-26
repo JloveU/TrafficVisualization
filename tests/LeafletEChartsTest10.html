@@ -75,6 +75,7 @@
         },
     });
     let map = chart.getModel().getComponent("leaflet").getLeaflet();
+    map.setMaxZoom(22);
     L.control.scale().addTo(map);
 
     let geoJsonOptions = {
