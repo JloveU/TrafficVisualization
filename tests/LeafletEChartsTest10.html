@@ -90,7 +90,7 @@
     map.setMaxZoom(22);
     let scaleControl = L.control.scale().addTo(map);
     let layerControl = L.control.layers().addTo(map);
-
+    let imageOverlayLayers = [];
     let geoJsonData = null;
     let geoJsonOptions = {
         "style": function (feature) {
@@ -174,11 +174,14 @@
         console.debug("[addImageOverlay] args:", args);
 
         if (args.showBounds) {
-            let boundsLayer = L.rectangle(args.bounds).addTo(map);
+            let boundsLayer = L.rectangle(args.bounds, {
+                "fill": false
+            }).addTo(map);
             layerControl.addOverlay(boundsLayer, args.name + "(bounds)");
         }
         let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
         layerControl.addOverlay(layer, args.name);
+        imageOverlayLayers.push(layer);
         if (args.fitBounds) {
             map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
         }
@@ -232,6 +235,17 @@
         }
 
         map.on("contextmenu", onMapContextMenu);
+    }
+
+    {
+        function resetAllImageOverlayLayers(e) {
+            for (let i = 0; i < imageOverlayLayers.length; ++i) {
+                imageOverlayLayers[i]._reset();
+            }
+        }
+
+        map.on("zoom", resetAllImageOverlayLayers);
+        map.on("move", resetAllImageOverlayLayers);
     }
 </script>
 </body>
