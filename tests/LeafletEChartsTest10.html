@@ -40,13 +40,13 @@
             },
             tiles: [{
                 label: "Google Satellite",
-                urlTemplate: "http://mt{s}.google.cn/vt/lyrs=s&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
+                urlTemplate: "https://mt{s}.google.cn/vt/lyrs=s&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
                 options: {
                     subdomains: "0123"
                 }
             }, {
                 label: "Google Road",
-                urlTemplate: "http://mt{s}.google.cn/vt/lyrs=m&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
+                urlTemplate: "https://mt{s}.google.cn/vt/lyrs=m&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
                 options: {
                     subdomains: "0123"
                 }
@@ -90,17 +90,45 @@
     map.setMaxZoom(22);
     L.control.scale().addTo(map);
 
+    let geoJsonData = null;
     let geoJsonOptions = {
         "style": function (feature) {
-            return (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("style")) ? feature.properties.style : {};
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("style")) {
+                return feature.properties.style;
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("style")) {
+                    return features[0].properties.style;
+                } else {
+                    return {};
+                }
+            } else {
+                return {};
+            }
         },
         "onEachFeature": function (feature, layer) {
             if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("popupContent")) {
                 layer.bindPopup(feature.properties.popupContent);
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("popupContent")) {
+                    layer.bindPopup(features[0].properties.popupContent);
+                }
             }
         },
         "filter": function (feature, layer) {
-            return (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("visible")) ? feature.properties.visible : true;
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("visible")) {
+                return feature.properties.visible;
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("visible")) {
+                    return features[0].properties.visible;
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
         }
     };
 
@@ -117,12 +145,22 @@
         map.setView(L.latLng(args.lat, args.lon), args.zoom);
     }
 
+    function fitBounds(args) {
+        console.debug("[fitBounds] args:", args);
+
+        map.fitBounds(args.bounds);
+    }
+
     function addGeoJson(args) {
         console.debug("[addGeoJson] args:", args);
 
         $.getJSON(args.url, function (data) {
+            geoJsonData = data;
             let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
-            map.fitBounds(layer.getBounds());
+            geoJsonData = null;
+            if (args.fitBounds) {
+                map.fitBounds(layer.getBounds());
+            }
 
             console.debug("[addGeoJson] Succeeded!");
         }).fail(function () {
@@ -137,19 +175,22 @@
             L.rectangle(args.bounds).addTo(map);
         }
         let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
-        map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
+        if (args.fitBounds) {
+            map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
+        }
 
         console.debug("[addImageOverlay] Succeeded!");
     }
 
     let commandFunctions = {
         "setView": setView,
+        "fitBounds": fitBounds,
         "addGeoJson": addGeoJson,
         "addImageOverlay": addImageOverlay
     };
 
     {
-        (function (){
+        (function () {
             let commands = JSON.parse(getQueryString("commands"));
             if (!commands) {
                 return;
@@ -177,8 +218,9 @@
 
             // examples:
             // {"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}
-            // {"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json"}}
-            // {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}}
+            // {"type": "fitBounds", "args": {"bounds": [[40.712216, -74.22655], [40.773941, -74.12544]]}}
+            // {"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}
+            // {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}
 
             console.debug("command: ", command);
 
