@@ -89,8 +89,8 @@
     let map = chart.getModel().getComponent("leaflet").getLeaflet();
     map.setMaxZoom(22);
     let scaleControl = L.control.scale().addTo(map);
-    let layerControl = L.control.layers().addTo(map);
-    let imageOverlayLayers = [];
+    let overlayLayerControl = L.control.layers().addTo(map);
+    let overlayLayers = [];
     let geoJsonData = null;
     let geoJsonOptions = {
         "style": function (feature) {
@@ -159,7 +159,8 @@
             geoJsonData = data;
             let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
             geoJsonData = null;
-            layerControl.addOverlay(layer, args.name);
+            overlayLayerControl.addOverlay(layer, args.name);
+            overlayLayers.push(layer);
             if (args.fitBounds) {
                 map.fitBounds(layer.getBounds());
             }
@@ -177,11 +178,12 @@
             let boundsLayer = L.rectangle(args.bounds, {
                 "fill": false
             }).addTo(map);
-            layerControl.addOverlay(boundsLayer, args.name + "(bounds)");
+            overlayLayerControl.addOverlay(boundsLayer, args.name + "(bounds)");
+            overlayLayers.push(boundsLayer);
         }
         let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
-        layerControl.addOverlay(layer, args.name);
-        imageOverlayLayers.push(layer);
+        overlayLayerControl.addOverlay(layer, args.name);
+        overlayLayers.push(layer);
         if (args.fitBounds) {
             map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
         }
@@ -238,14 +240,14 @@
     }
 
     {
-        function resetAllImageOverlayLayers(e) {
-            for (let i = 0; i < imageOverlayLayers.length; ++i) {
-                imageOverlayLayers[i]._reset();
+        function resetAllOverlayLayers(e) {
+            for (let i = 0; i < overlayLayers.length; ++i) {
+                overlayLayers[i]._reset();
             }
         }
 
-        map.on("zoom", resetAllImageOverlayLayers);
-        map.on("move", resetAllImageOverlayLayers);
+        map.on("zoom", resetAllOverlayLayers);
+        map.on("move", resetAllOverlayLayers);
     }
 </script>
 </body>
