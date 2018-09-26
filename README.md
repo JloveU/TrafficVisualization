@@ -23,4 +23,4 @@ A number of web pages for visualizing big data in traffic.
 - [LeafletEChartsTest7](tests/LeafletEChartsTest7.html)
 - [LeafletEChartsTest8](tests/LeafletEChartsTest8.html)
 - [LeafletEChartsTest9](tests/LeafletEChartsTest9.html)
-- <a href='tests/LeafletEChartsTest10.html?commands=[{"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}, {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}]'>LeafletEChartsTest10</a>
+- <a href='tests/LeafletEChartsTest10.html?commands=[{"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}, {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}]'>LeafletEChartsTest10</a>

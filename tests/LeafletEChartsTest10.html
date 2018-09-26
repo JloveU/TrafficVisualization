@@ -88,7 +88,8 @@
     });
     let map = chart.getModel().getComponent("leaflet").getLeaflet();
     map.setMaxZoom(22);
-    L.control.scale().addTo(map);
+    let scaleControl = L.control.scale().addTo(map);
+    let layerControl = L.control.layers().addTo(map);
 
     let geoJsonData = null;
     let geoJsonOptions = {
@@ -158,6 +159,7 @@
             geoJsonData = data;
             let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
             geoJsonData = null;
+            layerControl.addOverlay(layer, args.name);
             if (args.fitBounds) {
                 map.fitBounds(layer.getBounds());
             }
@@ -172,9 +174,11 @@
         console.debug("[addImageOverlay] args:", args);
 
         if (args.showBounds) {
-            L.rectangle(args.bounds).addTo(map);
+            let boundsLayer = L.rectangle(args.bounds).addTo(map);
+            layerControl.addOverlay(boundsLayer, args.name + "(bounds)");
         }
         let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
+        layerControl.addOverlay(layer, args.name);
         if (args.fitBounds) {
             map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
         }
@@ -198,7 +202,7 @@
 
             // examples:
             // ?commands=[{"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}]
-            // ?commands=[{"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json"}}, {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true}}]
+            // ?commands=[{"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}, {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}]
 
             console.debug("commands: ", commands);
 
@@ -219,8 +223,8 @@
             // examples:
             // {"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}
             // {"type": "fitBounds", "args": {"bounds": [[40.712216, -74.22655], [40.773941, -74.12544]]}}
-            // {"type": "addGeoJson", "args": {"url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}
-            // {"type": "addImageOverlay", "args": {"url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}
+            // {"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}
+            // {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}
 
             console.debug("command: ", command);
 
