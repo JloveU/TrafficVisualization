@@ -242,7 +242,17 @@
     {
         function resetAllOverlayLayers(e) {
             for (let i = 0; i < overlayLayers.length; ++i) {
-                overlayLayers[i]._reset();
+                let layer = overlayLayers[i];
+                if (!map.hasLayer(layer)) {
+                    continue;
+                }
+
+                if (layer.hasOwnProperty("_reset")) {
+                    layer._reset();
+                } else {
+                    map.removeLayer(layer);
+                    map.addLayer(layer);
+                }
             }
         }
 
