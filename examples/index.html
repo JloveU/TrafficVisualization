@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaflet ECharts Test 10 (Visualization of GeoJSON Data and Image Overlay)</title>
+    <link rel="stylesheet" href="../resources/libs/leaflet/1.3.4/leaflet.css"/>
+    <script src="../resources/libs/leaflet/1.3.4/leaflet.js"></script>
+    <script src="../resources/libs/echarts/4.1.0/echarts.min.js"></script>
+    <script src="../resources/libs/echarts-leaflet/22b55a16/echarts-leaflet.js"></script>
+    <script src="../resources/libs/jquery/3.3.1/jquery-3.3.1.min.js"></script>
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    let chart = echarts.init(document.getElementById("map"));
+    chart.setOption({
+        title: {
+            text: "Visualization of GeoJSON Data and Image Overlay",
+            left: "center",
+            textStyle: {
+                color: "#fff"
+            }
+        },
+        tooltip: {
+            trigger: "item"
+        },
+        leaflet: {
+            center: [116.3912, 39.9062],
+            zoom: 12,
+            roam: true,
+            layerControl: {
+                position: "topright"
+            },
+            tiles: [{
+                label: "Google Satellite",
+                urlTemplate: "https://mt{s}.google.cn/vt/lyrs=s&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
+                options: {
+                    subdomains: "0123"
+                }
+            }, {
+                label: "Google Road",
+                urlTemplate: "https://mt{s}.google.cn/vt/lyrs=m&scale=2&hl=zh-CN&gl=cn&x={x}&y={y}&z={z}",
+                options: {
+                    subdomains: "0123"
+                }
+            }, {
+                label: "Gaode Satellite",
+                urlTemplate: "https://webst0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
+                options: {
+                    subdomains: "1234"
+                }
+            }, {
+                label: "Gaode Road",
+                urlTemplate: "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+                options: {
+                    subdomains: "1234"
+                }
+            }, {
+                label: "Map World",
+                urlTemplate: "https://t{s}.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}",
+                options: {
+                    subdomains: "1234"
+                }
+            }, {
+                label: "Esri Satellite",
+                urlTemplate: "https://server.arcgisonline.com/arcgis/rest/services/world_imagery/mapserver/tile/{z}/{y}/{x}"
+            }, {
+                label: "Open Street Map",
+                urlTemplate: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+                options: {
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+                }
+            }, {
+                label: "GeoQ Blue",
+                urlTemplate: "https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}"
+            }, {
+                label: "None",
+                urlTemplate: ""
+            }]
+        },
+    });
+    let map = chart.getModel().getComponent("leaflet").getLeaflet();
+    map.setMaxZoom(22);
+    let scaleControl = L.control.scale().addTo(map);
+    let layerControl = L.control.layers().addTo(map);
+    let imageOverlayLayers = [];
+    let geoJsonData = null;
+    let geoJsonOptions = {
+        "style": function (feature) {
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("style")) {
+                return feature.properties.style;
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("style")) {
+                    return features[0].properties.style;
+                } else {
+                    return {};
+                }
+            } else {
+                return {};
+            }
+        },
+        "onEachFeature": function (feature, layer) {
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("popupContent")) {
+                layer.bindPopup(feature.properties.popupContent);
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("popupContent")) {
+                    layer.bindPopup(features[0].properties.popupContent);
+                }
+            }
+        },
+        "filter": function (feature, layer) {
+            if (feature.hasOwnProperty("properties") && feature.properties.hasOwnProperty("visible")) {
+                return feature.properties.visible;
+            } else if (geoJsonData) {
+                let features = L.Util.isArray(geoJsonData) ? geoJsonData : geoJsonData.features;
+                if (features && (features.length > 0) && features[0].hasOwnProperty("properties") && features[0].properties.hasOwnProperty("visible")) {
+                    return features[0].properties.visible;
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    };
+
+    function getQueryString(name) {
+        let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        let r = window.location.search.substr(1).match(reg);
+
+        return (r != null) ? unescape(r[2]) : null;
+    }
+
+    function setView(args) {
+        console.debug("[setView] args:", args);
+
+        map.setView(L.latLng(args.lat, args.lon), args.zoom);
+    }
+
+    function fitBounds(args) {
+        console.debug("[fitBounds] args:", args);
+
+        map.fitBounds(args.bounds);
+    }
+
+    function addGeoJson(args) {
+        console.debug("[addGeoJson] args:", args);
+
+        $.getJSON(args.url, function (data) {
+            geoJsonData = data;
+            let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
+            geoJsonData = null;
+            layerControl.addOverlay(layer, args.name);
+            if (args.fitBounds) {
+                map.fitBounds(layer.getBounds());
+            }
+
+            console.debug("[addGeoJson] Succeeded!");
+        }).fail(function () {
+            console.debug("[addGeoJson] Failed!");
+        });
+    }
+
+    function addImageOverlay(args) {
+        console.debug("[addImageOverlay] args:", args);
+
+        if (args.showBounds) {
+            let boundsLayer = L.rectangle(args.bounds, {
+                "fill": false
+            }).addTo(map);
+            layerControl.addOverlay(boundsLayer, args.name + "(bounds)");
+        }
+        let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
+        layerControl.addOverlay(layer, args.name);
+        imageOverlayLayers.push(layer);
+        if (args.fitBounds) {
+            map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
+        }
+
+        console.debug("[addImageOverlay] Succeeded!");
+    }
+
+    let commandFunctions = {
+        "setView": setView,
+        "fitBounds": fitBounds,
+        "addGeoJson": addGeoJson,
+        "addImageOverlay": addImageOverlay
+    };
+
+    {
+        (function () {
+            let commands = JSON.parse(getQueryString("commands"));
+            if (!commands) {
+                return;
+            }
+
+            // examples:
+            // ?commands=[{"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}]
+            // ?commands=[{"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}, {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}]
+
+            console.debug("commands: ", commands);
+
+            for (let i = 0; i < commands.length; ++i) {
+                let command = commands[i];
+                commandFunctions[command.type](command.args);
+            }
+        })();
+    }
+
+    {
+        function onMapContextMenu(e) {
+            let command = JSON.parse(prompt("Please input a command:"));
+            if (!command) {
+                return;
+            }
+
+            // examples:
+            // {"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}
+            // {"type": "fitBounds", "args": {"bounds": [[40.712216, -74.22655], [40.773941, -74.12544]]}}
+            // {"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}
+            // {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}
+
+            console.debug("command: ", command);
+
+            commandFunctions[command.type](command.args);
+        }
+
+        map.on("contextmenu", onMapContextMenu);
+    }
+
+    {
+        function resetAllImageOverlayLayers(e) {
+            for (let i = 0; i < imageOverlayLayers.length; ++i) {
+                imageOverlayLayers[i]._reset();
+            }
+        }
+
+        map.on("zoom", resetAllImageOverlayLayers);
+        map.on("move", resetAllImageOverlayLayers);
+    }
+</script>
+</body>
+</html>
