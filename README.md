@@ -3,18 +3,11 @@
 A number of web pages for visualizing big data in traffic.
 
 
-### Test Examples
-
-**Visualization framework:**
-
-- [ECharts](http://echarts.baidu.com/)
-- [Leaflet](https://leafletjs.com/)
-
-**Example Pages:**
+### Examples
 
 - <a href='examples/index.html?commands=[{"type": "addImageOverlay", "args": {"name": "ImageOverlay", "url": "../tests/GeoJsonGenerator/GoogleSatellite-x215782-y99255-z18.jpg", "bounds": [[39.98553841480973, 116.33148193359375], [39.98659063142852, 116.33285522460938]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}, {"type": "addGeoJson", "args": {"name": "GeoJson", "url": "../tests/GeoJsonGenerator/output.json", "fitBounds": false}}]'>index</a>
 
-**Test Pages:**
+### Tests
 
 - [LeafletTest1](tests/LeafletTest1.html)
 - [LeafletTest2](tests/LeafletTest2.html)
@@ -28,3 +21,8 @@ A number of web pages for visualizing big data in traffic.
 - [LeafletEChartsTest8](tests/LeafletEChartsTest8.html)
 - [LeafletEChartsTest9](tests/LeafletEChartsTest9.html)
 - <a href='tests/LeafletEChartsTest10.html?commands=[{"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "./ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}, {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "./legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}]'>LeafletEChartsTest10</a>
+
+### Visualization Framework
+
+- [ECharts](http://echarts.baidu.com/)
+- [Leaflet](https://leafletjs.com/)
