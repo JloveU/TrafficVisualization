@@ -149,6 +149,12 @@
         mapRoot.classList.add('ec-extension-leaflet');
         root.appendChild(mapRoot);
         var _map = leafletModel.__map = L.map(mapRoot);
+        leafletModel.__mapAttachments = {
+          "baseLayers": {
+            "nolabel": []
+          },
+          "layerControls": {}
+        };
         var tiles = leafletModel.get('tiles');
         var baseLayers = {};
         var baseLayerAdded = false;
@@ -168,9 +174,11 @@
                 baseLayerAdded = true;
               }
               baseLayers[tile.label] = tileLayer;
+              leafletModel.__mapAttachments["baseLayers"][tile.label] = tileLayer;
             } else {
               // add all tiles without labels into the map
               tileLayer.addTo(_map);
+              leafletModel.__mapAttachments["baseLayers"]["nolabel"].push(tileLayer);
             }
           }
           // add layer control when there are more than two layers
@@ -191,7 +199,8 @@
 
         if (tiles.length > 1) {
           var layerControlOpts = leafletModel.get('layerControl');
-          L.control.layers(baseLayers, {}, layerControlOpts).addTo(_map);
+          var layerControl = L.control.layers(baseLayers, {}, layerControlOpts).addTo(_map);
+          leafletModel.__mapAttachments["layerControls"]["baseLayers"] = layerControl;
         }
         new CustomOverlay(viewportRoot).addTo(_map);
       }
@@ -239,6 +248,11 @@
     getLeaflet: function getLeaflet() {
       // __map is injected when creating LeafletCoordSys
       return this.__map;
+    },
+
+    getLeafletMapAttachments: function getLeafletMapAttachments() {
+      // __mapAttachments is injected when creating LeafletCoordSys
+      return this.__mapAttachments;
     },
 
     setCenterAndZoom: function setCenterAndZoom(center, zoom) {

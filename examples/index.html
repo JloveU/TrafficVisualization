@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="../resources/libs/leaflet/1.3.4/leaflet.css"/>
     <script src="../resources/libs/leaflet/1.3.4/leaflet.js"></script>
     <script src="../resources/libs/echarts/4.1.0/echarts.min.js"></script>
-    <script src="../resources/libs/echarts-leaflet/22b55a16/echarts-leaflet.js"></script>
+    <script src="../resources/libs/echarts-leaflet/22b55a16_modified/echarts-leaflet.js"></script>
     <script src="../resources/libs/jquery/3.3.1/jquery-3.3.1.min.js"></script>
     <style>
         html, body, #map {
@@ -89,8 +89,10 @@
     let map = chart.getModel().getComponent("leaflet").getLeaflet();
     map.setMaxZoom(22);
     let scaleControl = L.control.scale().addTo(map);
-    let overlayLayerControl = L.control.layers().addTo(map);
-    let overlayLayers = [];
+    let baseLayersControl = chart.getModel().getComponent("leaflet").getLeafletMapAttachments()["layerControls"]["baseLayers"];
+    let baseLayers = chart.getModel().getComponent("leaflet").getLeafletMapAttachments()["baseLayers"];
+    let overlayLayersControl = L.control.layers().addTo(map);
+    let overlayLayers = {};
     let geoJsonData = null;
     let geoJsonOptions = {
         "style": function (feature) {
@@ -152,6 +154,48 @@
         map.fitBounds(args.bounds);
     }
 
+    function setBaseLayersVisible(args) {
+        console.debug("[setBaseLayersVisible] args:", args);
+
+        for (let i = 0; i < args.length; ++i) {
+            let arg = args[i];
+            let layer = baseLayers[arg.name];
+            if (!layer) {
+                continue;
+            }
+
+            for (let j = 0; j < baseLayersControl._layerControlInputs.length; ++j) {
+                let input = baseLayersControl._layerControlInputs[j];
+                if (input.layerId === layer._leaflet_id) {
+                    if (input.checked !== arg.visible) {
+                        input.click();
+                    }
+                }
+            }
+        }
+    }
+
+    function setOverlayLayersVisible(args) {  // TODO may affect nothing for the reason of jQuery's async request in function "addGeoJson()"
+        console.debug("[setOverlayLayersVisible] args:", args);
+
+        for (let i = 0; i < args.length; ++i) {
+            let arg = args[i];
+            let layer = overlayLayers[arg.name];
+            if (!layer) {
+                continue;
+            }
+
+            for (let j = 0; j < overlayLayersControl._layerControlInputs.length; ++j) {
+                let input = overlayLayersControl._layerControlInputs[j];
+                if (input.layerId === layer._leaflet_id) {
+                    if (input.checked !== arg.visible) {
+                        input.click();
+                    }
+                }
+            }
+        }
+    }
+
     function addGeoJson(args) {
         console.debug("[addGeoJson] args:", args);
 
@@ -159,8 +203,8 @@
             geoJsonData = data;
             let layer = L.geoJSON(data, geoJsonOptions).addTo(map);
             geoJsonData = null;
-            overlayLayerControl.addOverlay(layer, args.name);
-            overlayLayers.push(layer);
+            overlayLayersControl.addOverlay(layer, args.name);
+            overlayLayers[args.name] = layer;
             if (args.fitBounds) {
                 map.fitBounds(layer.getBounds());
             }
@@ -178,12 +222,12 @@
             let boundsLayer = L.rectangle(args.bounds, {
                 "fill": false
             }).addTo(map);
-            overlayLayerControl.addOverlay(boundsLayer, args.name + "(bounds)");
-            overlayLayers.push(boundsLayer);
+            overlayLayersControl.addOverlay(boundsLayer, args.name + "(bounds)");
+            overlayLayers[args.name + "(bounds)"] = boundsLayer;
         }
         let layer = L.imageOverlay(args.url, args.bounds, args.options).addTo(map).bringToFront();
-        overlayLayerControl.addOverlay(layer, args.name);
-        overlayLayers.push(layer);
+        overlayLayersControl.addOverlay(layer, args.name);
+        overlayLayers[args.name] = layer;
         if (args.fitBounds) {
             map.fitBounds(args.bounds);  // map.flyToBounds(bounds);
         }
@@ -194,6 +238,8 @@
     let commandFunctions = {
         "setView": setView,
         "fitBounds": fitBounds,
+        "setBaseLayersVisible": setBaseLayersVisible,
+        "setOverlayLayersVisible": setOverlayLayersVisible,
         "addGeoJson": addGeoJson,
         "addImageOverlay": addImageOverlay
     };
@@ -228,6 +274,7 @@
             // examples:
             // {"type": "setView", "args": {"lon": 116.3912, "lat": 39.9062, "zoom": 12}}
             // {"type": "fitBounds", "args": {"bounds": [[40.712216, -74.22655], [40.773941, -74.12544]]}}
+            // {"type": "setBaseLayersVisible", "args": [{"name": "Google Road", "visible": true}]}
             // {"type": "addGeoJson", "args": {"name": "USAGeoJson", "url": "../tests/ECharts/Example/data/asset/geo/USA_.json", "fitBounds": true}}
             // {"type": "addImageOverlay", "args": {"name": "NewarkImageOverlay", "url": "../tests/legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", "bounds": [[40.712216, -74.22655], [40.773941, -74.12544]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}
 
@@ -241,8 +288,9 @@
 
     {
         function resetAllOverlayLayers(e) {
-            for (let i = 0; i < overlayLayers.length; ++i) {
-                let layer = overlayLayers[i];
+            let overlayLayers_ = Object.values(overlayLayers);
+            for (let i = 0; i < overlayLayers_.length; ++i) {
+                let layer = overlayLayers_[i];
                 if (!map.hasLayer(layer)) {
                     continue;
                 }

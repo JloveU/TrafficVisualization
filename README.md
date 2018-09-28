@@ -8,7 +8,7 @@ A number of web pages for visualizing big data in traffic.
 
 ### Examples
 
-- <a href='examples/index.html?commands=[{"type": "addImageOverlay", "args": {"name": "ImageOverlay", "url": "../tests/GeoJsonGenerator/GoogleSatellite-x215782-y99255-z18.jpg", "bounds": [[39.98553841480973, 116.33148193359375], [39.98659063142852, 116.33285522460938]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}, {"type": "addGeoJson", "args": {"name": "GeoJson", "url": "../tests/GeoJsonGenerator/output.json", "fitBounds": false}}]'>index</a>
+- <a href='examples/index.html?commands=[{"type": "addImageOverlay", "args": {"name": "ImageOverlay", "url": "../tests/GeoJsonGenerator/GoogleSatellite-x215782-y99255-z18.jpg", "bounds": [[39.98553841480973, 116.33148193359375], [39.98659063142852, 116.33285522460938]], "options": {"interactive": true, "crossOrigin": true}, "showBounds": true, "fitBounds": true}}, {"type": "addGeoJson", "args": {"name": "GeoJson", "url": "../tests/GeoJsonGenerator/output.json", "fitBounds": false}}, {"type": "setBaseLayersVisible", "args": [{"name": "Google Road", "visible": true}]}, {"type": "setView", "args": {"lon": 116.332, "lat": 39.986, "zoom": 14}}, {"type": "setView", "args": {"lon": 116.332, "lat": 39.986, "zoom": 18}}]'>index</a>
 
 ### Tests
 
